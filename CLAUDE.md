@@ -28,6 +28,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Supabase接続用の環境変数は`.env.example`にキーのみ定義済み（値は未設定）。実際に使う際は`.env.local`を作成し、Supabaseプロジェクトの値を設定する。
 - PWAアイコン（`public/icons/`）は単色のプレースホルダー。本番前に実際のロゴへ差し替えが必要。
 
+## Supabaseセットアップ手順（初回のみ・ユーザー作業）
+
+1. https://supabase.com でアカウント作成し、新規プロジェクトを作成する
+2. Supabaseダッシュボードの「SQL Editor」を開き、`supabase/schema.sql`の内容を貼り付けて実行する（`transactions`テーブルが作成される）
+3. 「Project Settings」→「API」から、Project URLとanon public keyをコピーする
+4. プロジェクトルートに`.env.local`ファイルを作成し（`.env.example`をコピーして作成）、以下を設定する
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=（コピーしたProject URL）
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=（コピーしたanon public key）
+   ```
+
+`.env.local`はGit管理対象外（`.gitignore`の`.env*`ルールで除外済み）。
+
 開発が進んだら、以下を追記してください。
 
 - テストの実行コマンド（単体テストの個別実行方法を含む）
