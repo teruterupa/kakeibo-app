@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createTransaction } from "@/app/actions/create-transaction";
 import { initialCreateTransactionState } from "@/lib/create-transaction-types";
@@ -120,6 +121,13 @@ export default function Home() {
           <p className="text-green-600">{state.message}</p>
         )}
       </form>
+
+      <Link
+        href="/transactions"
+        className="text-center text-sm text-gray-500 underline"
+      >
+        一覧・集計を見る
+      </Link>
     </main>
   );
 }
