@@ -122,12 +122,20 @@ export default function Home() {
         )}
       </form>
 
-      <Link
-        href="/transactions"
-        className="text-center text-sm text-gray-500 underline"
-      >
-        一覧・集計を見る
-      </Link>
+      <div className="flex flex-col gap-2">
+        <Link
+          href="/transactions"
+          className="rounded bg-gray-800 px-4 py-3 text-center text-white"
+        >
+          一覧・集計を見る
+        </Link>
+        <Link
+          href="/calendar"
+          className="rounded bg-gray-800 px-4 py-3 text-center text-white"
+        >
+          カレンダーで見る
+        </Link>
+      </div>
     </main>
   );
 }
