@@ -2,16 +2,12 @@
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCategoriesFor, type TransactionType } from "@/lib/categories";
+import {
+  type CreateTransactionState,
+  initialCreateTransactionState,
+} from "@/lib/create-transaction-types";
 
-export type CreateTransactionState = {
-  status: "idle" | "success" | "error";
-  message: string;
-};
-
-export const initialCreateTransactionState: CreateTransactionState = {
-  status: "idle",
-  message: "",
-};
+export { type CreateTransactionState, initialCreateTransactionState };
 
 export async function createTransaction(
   _prevState: CreateTransactionState,

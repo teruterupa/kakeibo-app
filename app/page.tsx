@@ -1,10 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import {
-  createTransaction,
-  initialCreateTransactionState,
-} from "@/app/actions/create-transaction";
+import { createTransaction } from "@/app/actions/create-transaction";
+import { initialCreateTransactionState } from "@/lib/create-transaction-types";
 import { getCategoriesFor, type TransactionType } from "@/lib/categories";
 
 function todayString(): string {
