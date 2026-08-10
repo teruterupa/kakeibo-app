@@ -13,15 +13,30 @@ function isValidMonth(value: string): boolean {
   return /^\d{4}-\d{2}$/.test(value);
 }
 
+function isValidDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function formatDateLabel(date: string): string {
+  const [, monthNum, day] = date.split("-").map(Number);
+  return `${monthNum}月${day}日`;
+}
+
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; date?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const monthParam = resolvedSearchParams.month;
   const month =
     monthParam && isValidMonth(monthParam) ? monthParam : currentMonthString();
+
+  const dateParam = resolvedSearchParams.date;
+  const filterDate =
+    dateParam && isValidDate(dateParam) && dateParam.startsWith(month)
+      ? dateParam
+      : null;
 
   let transactions: Transaction[] = [];
   let loadError: string | null = null;
@@ -33,6 +48,9 @@ export default async function TransactionsPage({
   }
 
   const summary = summarizeTransactions(transactions);
+  const displayedTransactions = filterDate
+    ? transactions.filter((t) => t.date === filterDate)
+    : transactions;
   const prevMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
 
@@ -96,8 +114,20 @@ export default async function TransactionsPage({
           </section>
 
           <section className="flex flex-col gap-2">
-            <h2 className="font-bold">取引一覧</h2>
-            <TransactionList transactions={transactions} month={month} />
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold">
+                {filterDate ? `${formatDateLabel(filterDate)}の取引` : "取引一覧"}
+              </h2>
+              {filterDate && (
+                <Link
+                  href={`/transactions?month=${month}`}
+                  className="text-sm text-gray-500 underline"
+                >
+                  月全体を表示
+                </Link>
+              )}
+            </div>
+            <TransactionList transactions={displayedTransactions} month={month} />
           </section>
         </>
       )}
