@@ -7,9 +7,11 @@ import type { Transaction } from "@/lib/transactions";
 export function TransactionList({
   transactions,
   month,
+  emptyMessage = "この月の取引はまだありません。",
 }: {
   transactions: Transaction[];
   month: string;
+  emptyMessage?: string;
 }) {
   async function handleDelete(id: string) {
     if (!confirm("この取引を削除しますか？")) return;
@@ -24,7 +26,7 @@ export function TransactionList({
   }
 
   if (transactions.length === 0) {
-    return <p className="text-gray-500">この月の取引はまだありません。</p>;
+    return <p className="text-gray-500">{emptyMessage}</p>;
   }
 
   return (

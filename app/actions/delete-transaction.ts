@@ -26,5 +26,6 @@ export async function deleteTransaction(
   }
 
   revalidatePath("/transactions");
+  revalidatePath("/calendar");
   return { status: "success", message: "削除しました。" };
 }

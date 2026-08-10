@@ -127,7 +127,15 @@ export default async function TransactionsPage({
                 </Link>
               )}
             </div>
-            <TransactionList transactions={displayedTransactions} month={month} />
+            <TransactionList
+              transactions={displayedTransactions}
+              month={month}
+              emptyMessage={
+                filterDate
+                  ? "この日の取引はありません。"
+                  : "この月の取引はまだありません。"
+              }
+            />
           </section>
         </>
       )}

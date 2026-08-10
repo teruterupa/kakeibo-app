@@ -76,5 +76,6 @@ export async function updateTransaction(
   }
 
   revalidatePath("/transactions");
+  revalidatePath("/calendar");
   redirect(returnMonth ? `/transactions?month=${returnMonth}` : "/transactions");
 }
