@@ -43,17 +43,26 @@ export async function createTransaction(
   const memo =
     typeof memoValue === "string" && memoValue !== "" ? memoValue : null;
 
-  const supabase = createServerSupabaseClient();
-  const { error } = await supabase.from("transactions").insert({
-    type,
-    date: dateValue,
-    category: categoryValue,
-    amount,
-    memo,
-  });
+  const genericErrorMessage =
+    "保存に失敗しました。通信環境を確認してもう一度お試しください。";
 
-  if (error) {
-    return { status: "error", message: `保存に失敗しました: ${error.message}` };
+  const supabase = createServerSupabaseClient();
+  try {
+    const { error } = await supabase.from("transactions").insert({
+      type,
+      date: dateValue,
+      category: categoryValue,
+      amount,
+      memo,
+    });
+
+    if (error) {
+      console.error(error);
+      return { status: "error", message: genericErrorMessage };
+    }
+  } catch (error) {
+    console.error(error);
+    return { status: "error", message: genericErrorMessage };
   }
 
   return { status: "success", message: "登録しました。" };

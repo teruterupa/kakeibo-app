@@ -6,11 +6,14 @@ import { initialCreateTransactionState } from "@/lib/create-transaction-types";
 import { getCategoriesFor, type TransactionType } from "@/lib/categories";
 
 function todayString(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 export default function Home() {
   const [type, setType] = useState<TransactionType>("expense");
+  const [date, setDate] = useState("");
   const [state, formAction, isPending] = useActionState(
     createTransaction,
     initialCreateTransactionState
@@ -19,11 +22,19 @@ export default function Home() {
   const categories = getCategoriesFor(type);
 
   useEffect(() => {
+    // サーバーとクライアントのレンダリング結果のズレ（ハイドレーションエラー）を避けるため、
+    // マウント後にのみ日付をセットしている（意図的にeffect内でsetStateしている）
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDate(todayString());
+  }, []);
+
+  useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();
       // サーバーアクションの結果（送信成功）に応じたリセットのため、意図的にeffect内でsetStateしている
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setType("expense");
+      setDate(todayString());
     }
   }, [state]);
 
@@ -37,7 +48,7 @@ export default function Home() {
             type="button"
             onClick={() => setType("expense")}
             className={`flex-1 rounded px-4 py-2 ${
-              type === "expense" ? "bg-black text-white" : "bg-gray-200"
+              type === "expense" ? "bg-black text-white" : "bg-gray-200 text-black"
             }`}
           >
             支出
@@ -46,7 +57,7 @@ export default function Home() {
             type="button"
             onClick={() => setType("income")}
             className={`flex-1 rounded px-4 py-2 ${
-              type === "income" ? "bg-black text-white" : "bg-gray-200"
+              type === "income" ? "bg-black text-white" : "bg-gray-200 text-black"
             }`}
           >
             収入
@@ -59,7 +70,8 @@ export default function Home() {
           <input
             type="date"
             name="date"
-            defaultValue={todayString()}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
             className="rounded border px-3 py-2"
             required
           />
