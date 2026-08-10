@@ -54,49 +54,53 @@ export default async function TransactionsPage({
         </Link>
       </div>
 
-      {loadError && <p className="text-red-600">{loadError}</p>}
+      {loadError ? (
+        <p className="text-red-600">{loadError}</p>
+      ) : (
+        <>
+          <section className="flex flex-col gap-2 rounded border p-4">
+            <h2 className="font-bold">集計</h2>
+            <p>収入合計：¥{summary.totalIncome.toLocaleString()}</p>
+            <p>支出合計：¥{summary.totalExpense.toLocaleString()}</p>
+            <p>差額：¥{summary.balance.toLocaleString()}</p>
 
-      <section className="flex flex-col gap-2 rounded border p-4">
-        <h2 className="font-bold">集計</h2>
-        <p>収入合計：¥{summary.totalIncome.toLocaleString()}</p>
-        <p>支出合計：¥{summary.totalExpense.toLocaleString()}</p>
-        <p>差額：¥{summary.balance.toLocaleString()}</p>
+            {Object.keys(summary.expenseByCategory).length > 0 && (
+              <div>
+                <h3 className="text-sm font-bold">支出の内訳</h3>
+                <ul className="text-sm text-gray-700">
+                  {Object.entries(summary.expenseByCategory).map(
+                    ([category, amount]) => (
+                      <li key={category}>
+                        {category}：¥{amount.toLocaleString()}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
 
-        {Object.keys(summary.expenseByCategory).length > 0 && (
-          <div>
-            <h3 className="text-sm font-bold">支出の内訳</h3>
-            <ul className="text-sm text-gray-700">
-              {Object.entries(summary.expenseByCategory).map(
-                ([category, amount]) => (
-                  <li key={category}>
-                    {category}：¥{amount.toLocaleString()}
-                  </li>
-                )
-              )}
-            </ul>
-          </div>
-        )}
+            {Object.keys(summary.incomeByCategory).length > 0 && (
+              <div>
+                <h3 className="text-sm font-bold">収入の内訳</h3>
+                <ul className="text-sm text-gray-700">
+                  {Object.entries(summary.incomeByCategory).map(
+                    ([category, amount]) => (
+                      <li key={category}>
+                        {category}：¥{amount.toLocaleString()}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
+          </section>
 
-        {Object.keys(summary.incomeByCategory).length > 0 && (
-          <div>
-            <h3 className="text-sm font-bold">収入の内訳</h3>
-            <ul className="text-sm text-gray-700">
-              {Object.entries(summary.incomeByCategory).map(
-                ([category, amount]) => (
-                  <li key={category}>
-                    {category}：¥{amount.toLocaleString()}
-                  </li>
-                )
-              )}
-            </ul>
-          </div>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-2">
-        <h2 className="font-bold">取引一覧</h2>
-        <TransactionList transactions={transactions} month={month} />
-      </section>
+          <section className="flex flex-col gap-2">
+            <h2 className="font-bold">取引一覧</h2>
+            <TransactionList transactions={transactions} month={month} />
+          </section>
+        </>
+      )}
 
       <Link href="/" className="text-center text-sm text-gray-500 underline">
         登録画面に戻る

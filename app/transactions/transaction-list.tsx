@@ -13,9 +13,13 @@ export function TransactionList({
 }) {
   async function handleDelete(id: string) {
     if (!confirm("この取引を削除しますか？")) return;
-    const result = await deleteTransaction(id);
-    if (result.status === "error") {
-      alert(result.message);
+    try {
+      const result = await deleteTransaction(id);
+      if (result.status === "error") {
+        alert(result.message);
+      }
+    } catch {
+      alert("削除に失敗しました。通信環境を確認してもう一度お試しください。");
     }
   }
 
