@@ -74,6 +74,54 @@ export function summarizeTransactions(
   return summary;
 }
 
+export type DailyTotal = {
+  totalIncome: number;
+  totalExpense: number;
+};
+
+export function groupTransactionsByDay(
+  transactions: Transaction[]
+): Record<string, DailyTotal> {
+  const result: Record<string, DailyTotal> = {};
+
+  for (const t of transactions) {
+    if (!result[t.date]) {
+      result[t.date] = { totalIncome: 0, totalExpense: 0 };
+    }
+    if (t.type === "income") {
+      result[t.date].totalIncome += t.amount;
+    } else {
+      result[t.date].totalExpense += t.amount;
+    }
+  }
+
+  return result;
+}
+
+export function buildCalendarGrid(month: string): (string | null)[][] {
+  const [year, monthNum] = month.split("-").map(Number);
+  const firstDay = new Date(year, monthNum - 1, 1);
+  const daysInMonth = new Date(year, monthNum, 0).getDate();
+  const startWeekday = firstDay.getDay();
+
+  const cells: (string | null)[] = [];
+  for (let i = 0; i < startWeekday; i++) {
+    cells.push(null);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    cells.push(`${year}-${pad(monthNum)}-${pad(day)}`);
+  }
+  while (cells.length % 7 !== 0) {
+    cells.push(null);
+  }
+
+  const weeks: (string | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+  return weeks;
+}
+
 export async function getTransactionsForMonth(
   month: string
 ): Promise<Transaction[]> {
