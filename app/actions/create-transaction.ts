@@ -1,18 +1,13 @@
+"use server";
+
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCategoriesFor, type TransactionType } from "@/lib/categories";
-import {
-  type CreateTransactionState,
-  initialCreateTransactionState,
-} from "@/lib/create-transaction-types";
-
-export { type CreateTransactionState, initialCreateTransactionState };
+import type { CreateTransactionState } from "@/lib/create-transaction-types";
 
 export async function createTransaction(
   _prevState: CreateTransactionState,
   formData: FormData
 ): Promise<CreateTransactionState> {
-  "use server";
-
   const typeValue = formData.get("type");
   let type: TransactionType;
   if (typeValue === "income" || typeValue === "expense") {
