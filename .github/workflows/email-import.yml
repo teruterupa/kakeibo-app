@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call email import endpoint
+        env:
+          EMAIL_IMPORT_URL: ${{ secrets.EMAIL_IMPORT_URL }}
+          EMAIL_IMPORT_SECRET: ${{ secrets.EMAIL_IMPORT_SECRET }}
         run: |
-          curl --fail -X POST "${{ secrets.EMAIL_IMPORT_URL }}" \
-            -H "Authorization: Bearer ${{ secrets.EMAIL_IMPORT_SECRET }}"
+          curl --fail -X POST "$EMAIL_IMPORT_URL" \
+            -H "Authorization: Bearer $EMAIL_IMPORT_SECRET"
