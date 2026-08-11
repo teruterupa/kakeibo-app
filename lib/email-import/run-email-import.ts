@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { EMAIL_PARSERS } from "@/lib/email-parsers";
 import type { CardEmail } from "@/lib/gmail-client";
+import { CREDIT_CARD_CATEGORY } from "@/lib/categories";
 
 export type EmailImportSummary = {
   emailsFound: number;
@@ -8,11 +9,10 @@ export type EmailImportSummary = {
   transactionsSkipped: number;
 };
 
-const CATEGORY_EXPENSE = "クレジットカード";
+const CATEGORY_EXPENSE = CREDIT_CARD_CATEGORY;
 const CATEGORY_INCOME = "その他";
 
 export function extractSenderAddress(fromHeader: string): string | null {
-  // "楽天カード株式会社 <info@mail.rakuten-card.co.jp>" のような形式にも対応する
   const match = fromHeader.match(/<([^>]+)>/);
   if (match) {
     return match[1].trim().toLowerCase();
@@ -49,8 +49,21 @@ export async function runEmailImport(
     }
 
     for (const [index, item] of parsedItems.entries()) {
-      const sourceMessageId =
-        parsedItems.length > 1 ? `${email.id}-${index}` : email.id;
+      const sourceMessageId = `${email.id}-${index}`;
+
+      // 取引を削除してもメールIDの重複防止レコードは消えないよう、
+      // transactionsテーブルとは別のimported_email_idsで重複判定する。
+      const { error: dedupeError } = await supabase
+        .from("imported_email_ids")
+        .insert({ message_id: sourceMessageId });
+
+      if (dedupeError) {
+        if (dedupeError.code !== "23505") {
+          console.error("重複チェックの記録に失敗しました:", dedupeError);
+        }
+        summary.transactionsSkipped++;
+        continue;
+      }
 
       const { error } = await supabase.from("transactions").insert({
         type: item.type,
@@ -63,9 +76,12 @@ export async function runEmailImport(
       });
 
       if (error) {
-        if (error.code !== "23505") {
-          console.error("取引の自動登録に失敗しました:", error);
-        }
+        console.error("取引の自動登録に失敗しました:", error);
+        // 取引の登録に失敗した場合は重複防止レコードも取り消し、次回のポーリングで再試行できるようにする
+        await supabase
+          .from("imported_email_ids")
+          .delete()
+          .eq("message_id", sourceMessageId);
         summary.transactionsSkipped++;
         continue;
       }

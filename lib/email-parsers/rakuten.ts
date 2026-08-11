@@ -1,10 +1,15 @@
 import type { EmailParser } from "./types";
 
 export const parseRakutenEmail: EmailParser = (_subject, bodyText) => {
-  const pattern = /(\d{4})\/(\d{2})\/(\d{2})\s+([^\d\n]+?)\s+([\d,]+)\s*円/g;
+  const normalized = bodyText
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n");
+
+  const pattern = /^(\d{4})\/(\d{2})\/(\d{2})\s+([^\d\n]+?)\s+([\d,]+)\s*円$/gm;
   const results = [];
 
-  for (const match of bodyText.matchAll(pattern)) {
+  for (const match of normalized.matchAll(pattern)) {
     const [, year, month, day, merchantRaw, amountRaw] = match;
     const amount = Number(amountRaw.replace(/,/g, ""));
     const merchant = merchantRaw.trim();

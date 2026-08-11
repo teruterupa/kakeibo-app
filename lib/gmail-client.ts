@@ -34,6 +34,8 @@ function decodeBase64Url(data: string): string {
 
 function stripHtml(html: string): string {
   return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(tr|p|div|td)>/gi, "\n")
     .replace(/<[^>]+>/g, "")
@@ -95,7 +97,7 @@ export async function searchCardEmails(
   senderAddresses: string[]
 ): Promise<CardEmail[]> {
   const fromQuery = senderAddresses.map((addr) => `from:${addr}`).join(" OR ");
-  const query = `(${fromQuery}) newer_than:2d`;
+  const query = `(${fromQuery}) newer_than:1d`;
 
   const listResponse = await gmail.users.messages.list({
     userId: "me",
@@ -103,30 +105,29 @@ export async function searchCardEmails(
     maxResults: 50,
   });
 
-  const messages = listResponse.data.messages ?? [];
-  const results: CardEmail[] = [];
+  const messageIds = (listResponse.data.messages ?? [])
+    .map((m) => m.id)
+    .filter((id): id is string => Boolean(id));
 
-  for (const message of messages) {
-    if (!message.id) {
-      continue;
-    }
+  const results = await Promise.all(
+    messageIds.map(async (id): Promise<CardEmail> => {
+      const detail = await gmail.users.messages.get({
+        userId: "me",
+        id,
+        format: "full",
+      });
 
-    const detail = await gmail.users.messages.get({
-      userId: "me",
-      id: message.id,
-      format: "full",
-    });
+      const headers = detail.data.payload?.headers;
+      const from = getHeader(headers, "From");
+      const subject = getHeader(headers, "Subject");
+      const bodyText = extractBodyText(detail.data.payload);
+      const receivedAt = detail.data.internalDate
+        ? new Date(Number(detail.data.internalDate))
+        : new Date();
 
-    const headers = detail.data.payload?.headers;
-    const from = getHeader(headers, "From");
-    const subject = getHeader(headers, "Subject");
-    const bodyText = extractBodyText(detail.data.payload);
-    const receivedAt = detail.data.internalDate
-      ? new Date(Number(detail.data.internalDate))
-      : new Date();
-
-    results.push({ id: message.id, from, subject, bodyText, receivedAt });
-  }
+      return { id, from, subject, bodyText, receivedAt };
+    })
+  );
 
   return results;
 }

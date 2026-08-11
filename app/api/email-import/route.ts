@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { EMAIL_PARSERS } from "@/lib/email-parsers";
 import { runEmailImport } from "@/lib/email-import/run-email-import";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const secret = process.env.EMAIL_IMPORT_SECRET;
   const authHeader = request.headers.get("authorization");
