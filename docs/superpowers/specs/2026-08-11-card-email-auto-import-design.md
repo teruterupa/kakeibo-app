@@ -80,11 +80,11 @@ export type ParsedCardTransaction = {
 export type EmailParser = (
   subject: string,
   bodyText: string,
-  receivedAt: Date // メールのDateヘッダー（JST変換済み）
-) => ParsedCardTransaction | null;
+  receivedAt: Date // メールのDateヘッダー（UTC基準のDateオブジェクト。JST変換は各パーサー側で行う）
+) => ParsedCardTransaction[];
 ```
 
-解析できない・想定外の形式だった場合は`null`を返す。呼び出し側はその場合そのメールをスキップする。
+1通のメールから0件（解析できない・想定外の形式だった場合）、1件、または複数件（楽天カードのように1通に複数明細が入りうる場合）の取引を返す共通インターフェースとする。空配列の場合、呼び出し側はそのメールをスキップする。
 
 ## 各社パーサーの解析ルール
 
