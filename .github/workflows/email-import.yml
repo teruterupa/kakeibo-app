@@ -1,0 +1,15 @@
+name: Card Email Auto Import
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  call-import-endpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call email import endpoint
+        run: |
+          curl --fail -X POST "${{ secrets.EMAIL_IMPORT_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.EMAIL_IMPORT_SECRET }}"

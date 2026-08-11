@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - DB: Supabase（クラウド保存。接続コード・テーブル定義・収支登録フォームを実装済み）
 - PWA: next-pwa（`next.config.ts`で有効化。開発中は無効、本番ビルド時のみ有効）
 - 認証: 未導入（後日NextAuth.js導入予定）
+- カード利用通知メール自動取込: Gmail API（`googleapis`）+ GitHub Actions（15分おきcron）。詳細は`docs/superpowers/specs/2026-08-11-card-email-auto-import-design.md`参照
 
 ## コマンド
 
@@ -44,6 +45,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `.env.local`はGit管理対象外（`.gitignore`の`.env*`ルールで除外済み）。
 
 - RLS（Row Level Security）は現在、認証が無いため全許可にしている（`supabase/schema.sql`参照）。認証（NextAuth.js）を導入する際は、必ずこのRLSポリシーを見直すこと。
+
+## カード利用通知メール自動取込セットアップ手順（初回のみ・ユーザー作業）
+
+現金以外の支払い（三井住友カード・楽天カード・JCBカード・三菱UFJ-VISAデビット）の利用通知メールを自動解析し、`transactions`テーブルに自動登録する機能。詳細設計は`docs/superpowers/specs/2026-08-11-card-email-auto-import-design.md`を参照。
+
+1. Supabaseの「SQL Editor」で、`supabase/schema.sql`に追記した`alter table transactions add column ...`の2文を実行する（`source`・`source_message_id`カラムが追加される）
+2. Google Cloud ConsoleでOAuthクライアント（デスクトップアプリ種別）を作成し、Gmail API（`gmail.readonly`スコープ）を有効化する
+3. OAuth同意画面を通じて、通知メールが届くGmailアカウント（`kiai.yu.fire@gmail.com`）でリフレッシュトークンを発行する
+4. `.env.local`とVercelの環境変数に以下を設定する
+   - `GMAIL_CLIENT_ID`
+   - `GMAIL_CLIENT_SECRET`
+   - `GMAIL_REFRESH_TOKEN`
+   - `EMAIL_IMPORT_SECRET`（任意のランダム文字列）
+5. GitHubリポジトリの Settings → Secrets and variables → Actions で、以下を設定する
+   - `EMAIL_IMPORT_URL`（例: `https://kakeibo-app-navy-five.vercel.app/api/email-import`）
+   - `EMAIL_IMPORT_SECRET`（Vercel側と同じ値）
+6. GitHub Actionsの「Card Email Auto Import」ワークフローを手動実行（workflow_dispatch）し、正常にレスポンスが返ることを確認する
+
+PayPayはメール通知が届かないため対象外。引き続き既存の手入力フォームで登録する。
 
 ## 全体のアーキテクチャ
 
