@@ -7,6 +7,7 @@ export const EXPENSE_CATEGORIES = [
   "娯楽",
   "光熱費",
   "住居",
+  "クレジットカード",
   "その他",
 ] as const;
 
