@@ -12,6 +12,15 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // git worktree（実装作業用の隔離ワークスペース）配下も除外する。
+    // 除外しないと、各worktree内の.next/dev以下のビルド生成物（node_modules由来の
+    // ベンダーコードを含む）までリポジトリルートからのlintで読み込まれ、
+    // メモリ不足でクラッシュする。
+    ".worktrees/**",
+    // next-pwaが本番ビルド時に自動生成するService Worker関連ファイル。
+    // .gitignoreで既に除外対象になっているものと合わせる。
+    "public/sw.js",
+    "public/workbox-*.js",
   ]),
 ]);
 
