@@ -55,3 +55,23 @@ create policy "Allow all access (no auth yet)"
   with check (true);
 alter table transactions add column if not exists source text not null default 'manual' check (source in ('manual', 'email'));
 alter table transactions add column if not exists source_message_id text unique;
+
+-- ============================================================
+-- 以下は、自動取込通知＋カテゴリ選択機能の追加にともなう変更。
+-- 新規セットアップ・既存デプロイのどちらでも、このブロックを
+-- SQL Editorに貼り付けて実行すればよい（べき等）。
+-- ============================================================
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+alter table push_subscriptions enable row level security;
+drop policy if exists "Allow all access (no auth yet)" on push_subscriptions;
+create policy "Allow all access (no auth yet)"
+  on push_subscriptions
+  for all
+  using (true)
+  with check (true);
