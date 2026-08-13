@@ -51,8 +51,8 @@
 - `lib/push/vapid.ts`：VAPID鍵（Webプッシュを送るための鍵ペア）を環境変数から読み込み、`web-push`ライブラリを初期化するユーティリティ
 - `lib/push/send-push-notification.ts`：`push_subscriptions`の全件を取得し、各宛先へ通知を送信する関数。送信失敗（宛先が無効／削除済み）を検知して該当行を自動削除する
 - `app/api/push-subscribe/route.ts`：ブラウザから送られてきた通知の宛先情報（購読情報）を`push_subscriptions`にupsert（保存・更新）するAPI
-- `components/push-subscribe-button.tsx`：「通知を有効にする」ボタン（Client Component）。タップで通知許可を求め、購読情報を`/api/push-subscribe`へ送信する。すでに購読済みなら「通知は有効です」と表示する
-- `worker/index.js`：カスタムService Worker。プッシュ通知の受信（`push`イベント）と、通知タップ時の画面遷移（`notificationclick`イベント）を追加する
+- `app/transactions/push-subscribe-button.tsx`：「通知を有効にする」ボタン（Client Component）。既存の`transaction-list.tsx`と同様、利用する`app/transactions/page.tsx`と同じディレクトリに配置する。タップで通知許可を求め、購読情報を`/api/push-subscribe`へ送信する。すでに購読済みなら「通知は有効です」と表示する
+- `worker/index.js`：カスタムService Worker。プッシュ通知の受信（`push`イベント）と、通知タップ時の画面遷移（`notificationclick`イベント）を追加する。next-pwaは`worker/index.js`を置くだけで自動検出し、生成するService Workerに取り込む標準機能（`customWorkerDir`、デフォルト値`"worker"`）を持っており、`next.config.ts`の変更は不要
 - `app/actions/categorize-transaction.ts`：`"use server"`ファイル。指定した取引1件のカテゴリだけを更新するServer Action
 - `app/transactions/[id]/categorize/page.tsx`：通知から開く、カテゴリ選択専用ページ。取引の種別（支出/収入）に応じたカテゴリのボタンを並べる
 - `app/transactions/uncategorized/page.tsx`：未分類の取引一覧ページ（通知を見逃した場合の保険用）
@@ -79,8 +79,8 @@
 - `lib/email-import/run-email-import.ts`：登録時のカテゴリを、`type: "expense"`なら固定だった`"クレジットカード"`から`UNCATEGORIZED_CATEGORY`に、`type: "income"`（三菱UFJの返金ケース）なら固定だった`"その他"`から`UNCATEGORIZED_CATEGORY`に変更する。insert成功後、insertされた各取引について`sendPushNotificationToAllSubscriptions`を呼び出す
 - `app/transactions/page.tsx`：ヘッダー付近に`PushSubscribeButton`を配置。未分類件数が1件以上あれば「未分類の取引が◯件あります」バナーを表示し、`/transactions/uncategorized`へリンクする
 - `lib/transactions.ts`：未分類件数を取得する`getUncategorizedTransactionCount()`と、未分類取引一覧を取得する関数を追加
-- `next.config.ts`：next-pwaの設定に`swSrc: "worker/index.js"`を追加し、自動生成のService Workerからカスタムファイルを使う方式（InjectManifestモード）に変更する
-- `package.json`：`web-push`（プッシュ送信用）と`workbox-precaching`（カスタムService Worker内でのプリキャッシュ用）を依存関係に追加する
+- `package.json`：`web-push`（プッシュ送信用）を依存関係に追加する
+- `.gitignore`：next-pwaがビルド時に自動生成する`public/worker-*.js`（カスタムService Workerのビルド成果物）を、既存の`public/sw.js`等と同様に除外対象へ追加する
 - `.env.example`：`NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT`を追記する
 
 ## 通知ペイロード
