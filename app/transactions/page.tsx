@@ -3,11 +3,13 @@ import {
   currentMonthString,
   formatMonthLabel,
   getTransactionsForMonth,
+  getUncategorizedTransactionCount,
   shiftMonth,
   summarizeTransactions,
   type Transaction,
 } from "@/lib/transactions";
 import { TransactionList } from "./transaction-list";
+import { PushSubscribeButton } from "./push-subscribe-button";
 
 function isValidMonth(value: string): boolean {
   return /^\d{4}-\d{2}$/.test(value);
@@ -47,6 +49,13 @@ export default async function TransactionsPage({
       "取引の取得に失敗しました。通信環境を確認してもう一度お試しください。";
   }
 
+  let uncategorizedCount = 0;
+  try {
+    uncategorizedCount = await getUncategorizedTransactionCount();
+  } catch {
+    uncategorizedCount = 0;
+  }
+
   const summary = summarizeTransactions(transactions);
   const displayedTransactions = filterDate
     ? transactions.filter((t) => t.date === filterDate)
@@ -70,6 +79,18 @@ export default async function TransactionsPage({
         >
           翌月 ▶
         </Link>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <PushSubscribeButton />
+        {uncategorizedCount > 0 && (
+          <Link
+            href="/transactions/uncategorized"
+            className="rounded bg-yellow-100 px-3 py-1 text-sm text-yellow-900"
+          >
+            未分類の取引が{uncategorizedCount}件あります →
+          </Link>
+        )}
       </div>
 
       {loadError ? (

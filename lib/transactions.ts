@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { TransactionType } from "@/lib/categories";
+import { UNCATEGORIZED_CATEGORY, type TransactionType } from "@/lib/categories";
 
 export type Transaction = {
   id: string;
@@ -156,4 +156,33 @@ export async function getTransactionById(
   }
 
   return data as Transaction | null;
+}
+
+export async function getUncategorizedTransactionCount(): Promise<number> {
+  const supabase = createServerSupabaseClient();
+  const { count, error } = await supabase
+    .from("transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("category", UNCATEGORIZED_CATEGORY);
+
+  if (error) {
+    throw new Error(`未分類件数の取得に失敗しました: ${error.message}`);
+  }
+
+  return count ?? 0;
+}
+
+export async function getUncategorizedTransactions(): Promise<Transaction[]> {
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id, date, type, category, amount, memo")
+    .eq("category", UNCATEGORIZED_CATEGORY)
+    .order("date", { ascending: false });
+
+  if (error) {
+    throw new Error(`未分類取引の取得に失敗しました: ${error.message}`);
+  }
+
+  return (data ?? []) as Transaction[];
 }
