@@ -1,0 +1,57 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+type SubscriptionPayload = {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+};
+
+function isValidSubscriptionPayload(
+  value: unknown
+): value is SubscriptionPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const v = value as Record<string, unknown>;
+  if (typeof v.endpoint !== "string" || v.endpoint === "") {
+    return false;
+  }
+  if (typeof v.keys !== "object" || v.keys === null) {
+    return false;
+  }
+  const keys = v.keys as Record<string, unknown>;
+  return typeof keys.p256dh === "string" && typeof keys.auth === "string";
+}
+
+export async function POST(request: NextRequest) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "不正なリクエストです。" }, { status: 400 });
+  }
+
+  if (!isValidSubscriptionPayload(body)) {
+    return NextResponse.json({ error: "不正なリクエストです。" }, { status: 400 });
+  }
+
+  const supabase = createServerSupabaseClient();
+  const { error } = await supabase.from("push_subscriptions").upsert(
+    {
+      endpoint: body.endpoint,
+      p256dh: body.keys.p256dh,
+      auth: body.keys.auth,
+    },
+    { onConflict: "endpoint" }
+  );
+
+  if (error) {
+    console.error("通知の購読情報の保存に失敗しました:", error);
+    return NextResponse.json({ error: "保存に失敗しました。" }, { status: 500 });
+  }
+
+  return NextResponse.json({ status: "ok" });
+}
