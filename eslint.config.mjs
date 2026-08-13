@@ -5,6 +5,15 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // カスタムService Worker。ブラウザではなくService Worker専用のグローバルスコープで動く。
+    files: ["worker/**/*.js"],
+    languageOptions: {
+      globals: {
+        self: "readonly",
+      },
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -21,6 +30,7 @@ const eslintConfig = defineConfig([
     // .gitignoreで既に除外対象になっているものと合わせる。
     "public/sw.js",
     "public/workbox-*.js",
+    "public/worker-*.js",
   ]),
 ]);
 
