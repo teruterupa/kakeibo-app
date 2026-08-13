@@ -44,7 +44,14 @@ export async function sendPushNotificationToAllSubscriptions(
     return;
   }
 
-  const webpush = getWebPush();
+  let webpush: ReturnType<typeof getWebPush>;
+  try {
+    webpush = getWebPush();
+  } catch (initError) {
+    console.error("VAPID設定の初期化に失敗しました:", initError);
+    return;
+  }
+
   const serializedPayload = JSON.stringify(payload);
 
   await Promise.all(
@@ -63,10 +70,14 @@ export async function sendPushNotificationToAllSubscriptions(
       } catch (sendError) {
         const statusCode = getStatusCode(sendError);
         if (statusCode === 404 || statusCode === 410) {
-          await supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("id", subscription.id);
+          try {
+            await supabase
+              .from("push_subscriptions")
+              .delete()
+              .eq("id", subscription.id);
+          } catch (deleteError) {
+            console.error("無効な購読情報の削除に失敗しました:", deleteError);
+          }
         } else {
           console.error("プッシュ通知の送信に失敗しました:", sendError);
         }
