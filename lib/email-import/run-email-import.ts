@@ -1,16 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { EMAIL_PARSERS } from "@/lib/email-parsers";
+import { EMAIL_PARSERS, SENDER_LABELS } from "@/lib/email-parsers";
 import type { CardEmail } from "@/lib/gmail-client";
-import { CREDIT_CARD_CATEGORY } from "@/lib/categories";
+import { UNCATEGORIZED_CATEGORY } from "@/lib/categories";
+import { sendPushNotificationToAllSubscriptions } from "@/lib/push/send-push-notification";
 
 export type EmailImportSummary = {
   emailsFound: number;
   transactionsInserted: number;
   transactionsSkipped: number;
 };
-
-const CATEGORY_EXPENSE = CREDIT_CARD_CATEGORY;
-const CATEGORY_INCOME = "その他";
 
 export function extractSenderAddress(fromHeader: string): string | null {
   const match = fromHeader.match(/<([^>]+)>/);
@@ -65,17 +63,21 @@ export async function runEmailImport(
         continue;
       }
 
-      const { error } = await supabase.from("transactions").insert({
-        type: item.type,
-        date: item.date,
-        category: item.type === "expense" ? CATEGORY_EXPENSE : CATEGORY_INCOME,
-        amount: item.amount,
-        memo: item.merchant,
-        source: "email",
-        source_message_id: sourceMessageId,
-      });
+      const { data: inserted, error } = await supabase
+        .from("transactions")
+        .insert({
+          type: item.type,
+          date: item.date,
+          category: UNCATEGORIZED_CATEGORY,
+          amount: item.amount,
+          memo: item.merchant,
+          source: "email",
+          source_message_id: sourceMessageId,
+        })
+        .select("id")
+        .single();
 
-      if (error) {
+      if (error || !inserted) {
         console.error("取引の自動登録に失敗しました:", error);
         // 取引の登録に失敗した場合は重複防止レコードも取り消し、次回のポーリングで再試行できるようにする
         await supabase
@@ -87,6 +89,13 @@ export async function runEmailImport(
       }
 
       summary.transactionsInserted++;
+
+      const senderLabel = senderAddress ? SENDER_LABELS[senderAddress] : undefined;
+      await sendPushNotificationToAllSubscriptions(supabase, {
+        title: `${senderLabel ?? "カード利用"} ¥${item.amount.toLocaleString()}`,
+        body: item.merchant,
+        url: `/transactions/${inserted.id}/categorize`,
+      });
     }
   }
 
