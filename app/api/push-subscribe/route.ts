@@ -26,6 +26,25 @@ function isValidSubscriptionPayload(
   return typeof keys.p256dh === "string" && typeof keys.auth === "string";
 }
 
+// 既知のWebプッシュサービスのホスト名のみ許可する（SSRF対策）。
+const ALLOWED_PUSH_ENDPOINT_HOSTS = new Set([
+  "fcm.googleapis.com", // Chrome / Edge / Android
+  "updates.push.services.mozilla.com", // Firefox
+  "web.push.apple.com", // Safari / iOS（このアプリの主要な利用環境）
+]);
+
+function isAllowedPushEndpoint(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  return (
+    url.protocol === "https:" && ALLOWED_PUSH_ENDPOINT_HOSTS.has(url.hostname)
+  );
+}
+
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {
@@ -35,6 +54,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (!isValidSubscriptionPayload(body)) {
+    return NextResponse.json({ error: "不正なリクエストです。" }, { status: 400 });
+  }
+
+  if (!isAllowedPushEndpoint(body.endpoint)) {
     return NextResponse.json({ error: "不正なリクエストです。" }, { status: 400 });
   }
 
