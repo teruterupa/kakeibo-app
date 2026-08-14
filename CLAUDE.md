@@ -29,6 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Supabase接続用の環境変数は`.env.example`にキーのみ定義済み（値は未設定）。実際に使う際は`.env.local`を作成し、Supabaseプロジェクトの値を設定する。
 - PWAアイコン（`public/icons/`）は単色のプレースホルダー。本番前に実際のロゴへ差し替えが必要。
 - **`"use server"`を付けたファイルはasync関数以外をexportできない**。Client Component（`"use client"`のファイル）から直接importされるServer Actionsのファイルでは、関数内インラインの`"use server"`は使えない（`app/actions/create-transaction.ts`は必ずファイル先頭に`"use server"`を書く方式にすること）。型や定数など、async関数以外でClient Componentと共有したいものは、`lib/create-transaction-types.ts`のように別ファイルに分離し、`"use server"`ファイルからはre-exportしないこと。
+- **`/api/push-subscribe`のSSRF対策**: `endpoint`が既知のWebプッシュサービス（`fcm.googleapis.com`・`updates.push.services.mozilla.com`・`web.push.apple.com`）のいずれかのhttps URLであることを検証している。将来他のブラウザ／プラットフォームに対応する際は、`app/api/push-subscribe/route.ts`の許可リストを見直すこと。
 
 ## Supabaseセットアップ手順（初回のみ・ユーザー作業）
 
@@ -64,6 +65,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 6. GitHub Actionsの「Card Email Auto Import」ワークフローを手動実行（workflow_dispatch）し、正常にレスポンスが返ることを確認する
 
 PayPayはメール通知が届かないため対象外。引き続き既存の手入力フォームで登録する。
+
+## 自動取込通知＋カテゴリ選択機能セットアップ手順（初回のみ・ユーザー作業）
+
+メール自動取込で取引が登録された際にスマートフォンへプッシュ通知を送り、通知から取引専用のカテゴリ選択画面（食費・日用品など）を開ける機能。詳細設計は`docs/superpowers/specs/2026-08-14-push-notification-categorize-design.md`を参照。
+
+1. Supabaseの「SQL Editor」で、`supabase/schema.sql`の「自動取込通知＋カテゴリ選択機能の追加にともなう変更」ブロックを実行する（`push_subscriptions`テーブルが追加される）
+2. VAPID鍵ペアを発行する（`npx web-push generate-vapid-keys`）
+3. `.env.local`とVercelの環境変数に以下を設定する
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT`（例: `mailto:kiai.yu.fire@gmail.com`）
+4. アプリをこの状態でデプロイ（またはローカルで`npm run build && npm run start`）する。iOSのWebプッシュ通知は本番相当のビルド（Service Workerが有効な状態）でホーム画面に追加したPWAでのみ動作する
+5. iPhoneのホーム画面に追加済みのアプリを開き、`/transactions`ページの「通知を有効にする」ボタンをタップし、通知許可ダイアログでOKを押す
+6. カード利用通知メールが届くタイミング（またはGitHub Actionsの「Card Email Auto Import」ワークフローを手動実行）で、実際に通知が届き、タップするとカテゴリ選択画面が開くことを確認する
 
 ## 全体のアーキテクチャ
 
