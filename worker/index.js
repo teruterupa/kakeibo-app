@@ -34,6 +34,12 @@ self.addEventListener("notificationclick", (event) => {
             return client.focus();
           }
         }
+        const matchedClient = windowClients.find((client) => "focus" in client);
+        if (matchedClient && "navigate" in matchedClient) {
+          return matchedClient.navigate(url).then((navigatedClient) =>
+            navigatedClient ? navigatedClient.focus() : matchedClient.focus()
+          );
+        }
         if (self.clients.openWindow) {
           return self.clients.openWindow(url);
         }

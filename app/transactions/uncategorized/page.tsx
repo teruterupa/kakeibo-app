@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getUncategorizedTransactions, type Transaction } from "@/lib/transactions";
 
+export const dynamic = "force-dynamic";
+
 export default async function UncategorizedTransactionsPage() {
   let transactions: Transaction[] = [];
   let loadError: string | null = null;

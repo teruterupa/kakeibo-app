@@ -30,6 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - PWAアイコン（`public/icons/`）は単色のプレースホルダー。本番前に実際のロゴへ差し替えが必要。
 - **`"use server"`を付けたファイルはasync関数以外をexportできない**。Client Component（`"use client"`のファイル）から直接importされるServer Actionsのファイルでは、関数内インラインの`"use server"`は使えない（`app/actions/create-transaction.ts`は必ずファイル先頭に`"use server"`を書く方式にすること）。型や定数など、async関数以外でClient Componentと共有したいものは、`lib/create-transaction-types.ts`のように別ファイルに分離し、`"use server"`ファイルからはre-exportしないこと。
 - **`/api/push-subscribe`のSSRF対策**: `endpoint`が既知のWebプッシュサービス（`fcm.googleapis.com`・`updates.push.services.mozilla.com`・`web.push.apple.com`）のいずれかのhttps URLであることを検証している。将来他のブラウザ／プラットフォームに対応する際は、`app/api/push-subscribe/route.ts`の許可リストを見直すこと。
+- **`searchParams`や`params`を使わないApp Routerのページは、Next.jsによってビルド時に静的生成され、Supabaseから取得したデータがビルド時点の内容で焼き付いてしまう**（`/transactions/uncategorized`で実際に発生した問題）。DBを読んで表示するページには`export const dynamic = "force-dynamic";`を必ず付けること。
 
 ## Supabaseセットアップ手順（初回のみ・ユーザー作業）
 
@@ -46,6 +47,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `.env.local`はGit管理対象外（`.gitignore`の`.env*`ルールで除外済み）。
 
 - RLS（Row Level Security）は現在、認証が無いため全許可にしている（`supabase/schema.sql`参照）。認証（NextAuth.js）を導入する際は、必ずこのRLSポリシーを見直すこと。
+- `push_subscriptions`も同様に全許可のため、認証を知らない第三者でも通知の購読を登録でき、以後カード利用の通知内容（カード会社名・金額・店舗名）がその第三者の端末にも届いてしまう。認証導入時にあわせて見直すこと。
 
 ## カード利用通知メール自動取込セットアップ手順（初回のみ・ユーザー作業）
 

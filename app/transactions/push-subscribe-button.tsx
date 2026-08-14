@@ -32,9 +32,14 @@ export function PushSubscribeButton() {
         if (!cancelled) setStatus("unsupported");
         return;
       }
-      const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      if (!cancelled) setStatus(existing ? "subscribed" : "unsubscribed");
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const existing = await registration.pushManager.getSubscription();
+        if (!cancelled) setStatus(existing ? "subscribed" : "unsubscribed");
+      } catch (checkError) {
+        console.error("通知の購読状態の確認に失敗しました:", checkError);
+        if (!cancelled) setStatus("error");
+      }
     }
 
     checkSubscription();

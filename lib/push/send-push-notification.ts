@@ -65,7 +65,8 @@ export async function sendPushNotificationToAllSubscriptions(
               auth: subscription.auth,
             },
           },
-          serializedPayload
+          serializedPayload,
+          { timeout: 5000 }
         );
       } catch (sendError) {
         const statusCode = getStatusCode(sendError);

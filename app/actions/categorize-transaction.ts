@@ -9,16 +9,17 @@ import {
   UNCATEGORIZED_CATEGORY,
 } from "@/lib/categories";
 
-const CATEGORIZABLE_CATEGORIES: string[] = [
-  ...EXPENSE_CATEGORIES,
-  ...INCOME_CATEGORIES,
-].filter((category) => category !== UNCATEGORIZED_CATEGORY);
+const CATEGORIZABLE_CATEGORIES: Set<string> = new Set(
+  [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES].filter(
+    (category) => category !== UNCATEGORIZED_CATEGORY
+  )
+);
 
 export async function categorizeTransaction(
   id: string,
   category: string
 ): Promise<void> {
-  if (!CATEGORIZABLE_CATEGORIES.includes(category)) {
+  if (!CATEGORIZABLE_CATEGORIES.has(category)) {
     throw new Error("不正なカテゴリです。");
   }
 

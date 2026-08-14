@@ -9,6 +9,17 @@ type SubscriptionPayload = {
   };
 };
 
+const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+function isValidPushKey(value: unknown, maxLength: number): boolean {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= maxLength &&
+    BASE64URL_PATTERN.test(value)
+  );
+}
+
 function isValidSubscriptionPayload(
   value: unknown
 ): value is SubscriptionPayload {
@@ -23,7 +34,9 @@ function isValidSubscriptionPayload(
     return false;
   }
   const keys = v.keys as Record<string, unknown>;
-  return typeof keys.p256dh === "string" && typeof keys.auth === "string";
+  return (
+    isValidPushKey(keys.p256dh, 100) && isValidPushKey(keys.auth, 50)
+  );
 }
 
 // 既知のWebプッシュサービスのホスト名のみ許可する（SSRF対策）。

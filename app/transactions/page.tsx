@@ -81,7 +81,7 @@ export default async function TransactionsPage({
         </Link>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="empty:hidden flex items-center justify-between gap-2">
         <PushSubscribeButton />
         {uncategorizedCount > 0 && (
           <Link
