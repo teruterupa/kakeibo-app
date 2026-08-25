@@ -26,23 +26,32 @@ self.addEventListener("notificationclick", (event) => {
       : "/transactions";
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        for (const client of windowClients) {
-          if (client.url.includes(url) && "focus" in client) {
-            return client.focus();
-          }
+    (async () => {
+      const windowClients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      for (const client of windowClients) {
+        if (client.url.includes(url) && "focus" in client) {
+          await client.focus();
+          return;
         }
-        const matchedClient = windowClients.find((client) => "focus" in client);
-        if (matchedClient && "navigate" in matchedClient) {
-          return matchedClient.navigate(url).then((navigatedClient) =>
-            navigatedClient ? navigatedClient.focus() : matchedClient.focus()
-          );
-        }
-        if (self.clients.openWindow) {
-          return self.clients.openWindow(url);
-        }
-      })
+      }
+
+      // WindowClient.navigate()での既存タブ再利用はSafari/WebKitで挙動が
+      // 不安定なため使わず、常に新しいナビゲーションを行うopenWindow()に
+      // 統一する（既存タブが1つしか持てないスタンドアロンPWAでは、
+      // ブラウザ側がそのタブへのナビゲーションとして扱う）。
+      if (self.clients.openWindow) {
+        await self.clients.openWindow(url);
+        return;
+      }
+
+      const fallbackClient = windowClients.find((client) => "focus" in client);
+      if (fallbackClient) {
+        await fallbackClient.focus();
+      }
+    })()
   );
 });
