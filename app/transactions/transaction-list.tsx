@@ -34,16 +34,24 @@ export function TransactionList({
       {transactions.map((t) => (
         <li
           key={t.id}
-          className="flex items-center justify-between gap-2 rounded border px-3 py-2"
+          className="flex items-center gap-3 rounded-md border border-gray-200 py-2 pr-3"
         >
-          <div className="flex flex-col">
+          <span
+            aria-hidden
+            className={
+              "h-10 w-1 shrink-0 rounded-full " +
+              (t.type === "income" ? "bg-[#2F6B4F]" : "bg-[#A4432E]")
+            }
+          />
+          <div className="flex flex-1 flex-col">
             <span className="text-sm text-gray-500">
               {t.date}　{t.category}
               {t.memo ? `　${t.memo}` : ""}
             </span>
             <span
               className={
-                t.type === "income" ? "text-blue-600" : "text-red-600"
+                "font-medium tabular-nums " +
+                (t.type === "income" ? "text-[#2F6B4F]" : "text-[#A4432E]")
               }
             >
               {t.type === "income" ? "+" : "-"}¥{t.amount.toLocaleString()}

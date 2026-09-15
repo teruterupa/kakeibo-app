@@ -28,6 +28,12 @@ export function currentMonthString(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
 
+// ローカル時刻基準（UTC基準の.toISOString()は日本時間の早朝に日付がずれるため使わない）
+export function currentDateString(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function shiftMonth(month: string, delta: number): string {
   const [year, monthNum] = month.split("-").map(Number);
   const d = new Date(year, monthNum - 1 + delta, 1);
