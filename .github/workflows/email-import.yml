@@ -1,8 +1,9 @@
 name: Card Email Auto Import
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  # 定期実行を停止中（もう使わないため）。再開する場合はscheduleのコメントを外す。
+  # schedule:
+  #   - cron: "*/15 * * * *"
   workflow_dispatch: {}
 
 jobs:
